@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #15181c;
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232, 162, 61, 0.07), transparent);
+}
+
+::selection {
+  background-color: #e8a23d;
+  color: #15181c;
+}
+
+*:focus-visible {
+  outline: 2px solid #e8a23d;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes gate-raise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-72deg);
+  }
+}
+
+@keyframes gate-lower {
+  from {
+    transform: rotate(-72deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.gate-arm-up {
+  animation: gate-raise 0.5s ease-out forwards;
+}
+
+.gate-arm-down {
+  animation: gate-lower 0.4s ease-in forwards;
+}
+
+.hazard-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #e8a23d,
+    #e8a23d 8px,
+    #15181c 8px,
+    #15181c 16px
+  );
+}
