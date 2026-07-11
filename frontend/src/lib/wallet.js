@@ -4,7 +4,7 @@ const NETWORK_PASSPHRASES = {
 }
 
 export function isFreighterInstalled() {
-  return typeof window !== 'undefined' && !!window.freighterApi
+  return typeof window !== 'undefined' && (!!window.freighterApi || !!window.freighter)
 }
 
 export async function connectWallet() {
@@ -13,11 +13,12 @@ export async function connectWallet() {
       'Freighter wallet extension not found. Install it from freighter.app to continue.'
     )
   }
-  const access = await window.freighterApi.requestAccess()
+  const api = window.freighterApi || window.freighter;
+  const access = await api.requestAccess()
   if (access.error) {
     throw new Error(access.error)
   }
-  const addressResult = await window.freighterApi.getAddress()
+  const addressResult = await api.getAddress()
   if (addressResult.error) {
     throw new Error(addressResult.error)
   }
@@ -26,14 +27,16 @@ export async function connectWallet() {
 
 export async function getNetworkDetails() {
   if (!isFreighterInstalled()) return null
-  return window.freighterApi.getNetworkDetails()
+  const api = window.freighterApi || window.freighter;
+  return api.getNetworkDetails()
 }
 
 export async function signTransaction(xdr, networkPassphrase) {
   if (!isFreighterInstalled()) {
     throw new Error('Freighter wallet extension not found.')
   }
-  const result = await window.freighterApi.signTransaction(xdr, {
+  const api = window.freighterApi || window.freighter;
+  const result = await api.signTransaction(xdr, {
     networkPassphrase,
   })
   if (result.error) {
