@@ -19,7 +19,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -36,13 +36,13 @@ jobs:
         run: cargo test --workspace --verbose
 
       - name: Build contracts to WASM (release)
-        run: cargo build --workspace --release --target wasm32-unknown-unknown
+        run: cargo build --workspace --release --target wasm32v1-none
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
         with:
           name: contract-wasm
-          path: target/wasm32-unknown-unknown/release/*.wasm
+          path: target/wasm32v1-none/release/*.wasm
           if-no-files-found: error
 
   frontend:
