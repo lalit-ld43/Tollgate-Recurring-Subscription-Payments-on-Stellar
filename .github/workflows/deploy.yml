@@ -15,7 +15,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Cache cargo registry and binaries
         uses: actions/cache@v4
@@ -35,9 +35,9 @@ jobs:
 
       - name: Build and Optimize Contracts
         run: |
-          cargo build --target wasm32-unknown-unknown --release
-          stellar contract optimize --wasm target/wasm32-unknown-unknown/release/billing.wasm
-          stellar contract optimize --wasm target/wasm32-unknown-unknown/release/subscription.wasm
+          cargo build --target wasm32v1-none --release
+          stellar contract optimize --wasm target/wasm32v1-none/release/billing.wasm
+          stellar contract optimize --wasm target/wasm32v1-none/release/subscription.wasm
 
       - name: Deploy and Initialize Contracts
         run: |
@@ -47,14 +47,14 @@ jobs:
           stellar keys fund subscriber --network testnet
           
           # Deploy Billing
-          BILLING_ID=$(stellar contract deploy --wasm target/wasm32-unknown-unknown/release/billing.optimized.wasm --source deployer --network testnet)
+          BILLING_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/billing.optimized.wasm --source deployer --network testnet)
           echo "BILLING_ID=$BILLING_ID" >> $GITHUB_ENV
           
           # Initialize Billing
           stellar contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer)
           
           # Deploy Subscription
-          SUBSCRIPTION_ID=$(stellar contract deploy --wasm target/wasm32-unknown-unknown/release/subscription.optimized.wasm --source deployer --network testnet)
+          SUBSCRIPTION_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/subscription.optimized.wasm --source deployer --network testnet)
           echo "SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
           
           # Initialize Subscription
