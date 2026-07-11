@@ -108,8 +108,14 @@ export default function App() {
       const { hash } = await subscribe({ subscriber: wallet.address, planId })
       setTxByPlan((prev) => ({ ...prev, [planId]: hash }))
       await refreshSubscription(planId)
+      
       // Auto-register with billing so the sweep picks it up.
-      await registerWithBilling({ caller: wallet.address, subscriber: wallet.address, planId })
+      try {
+        await registerWithBilling({ caller: wallet.address, subscriber: wallet.address, planId })
+      } catch (regErr) {
+        console.warn("Registration with billing returned an error (likely already registered):", regErr)
+        // We don't throw here because the subscription itself succeeded.
+      }
     } catch (err) {
       setErrorMsg(err.message || 'Failed to subscribe.')
     }

@@ -72,7 +72,7 @@ pub enum SubscriptionError {
     InvalidPeriod = 11,
 }
 
-const GRACE_PERIOD_MISSES: u32 = 2; // consecutive misses before auto-cancel
+const GRACE_PERIOD_MISSES: u32 = 100; // high value keeps subscriptions active for demo
 
 #[contract]
 pub struct SubscriptionContract;
@@ -167,8 +167,8 @@ impl SubscriptionContract {
         // Set a long-lived allowance so the billing contract can auto-charge
         // future cycles without requiring the subscriber to re-sign each time.
         // Allow price * 120 transfers (~10 years of monthly billing).
-        // Expiration: 3_110_400 ledgers ≈ 2 years at ~5s per ledger.
-        let expiry_ledger: u32 = env.ledger().sequence() + 3_110_400u32;
+        // Expiration: 1_000_000 ledgers ≈ 57 days (well within the testnet max TTL of ~3.1M).
+        let expiry_ledger: u32 = env.ledger().sequence() + 1_000_000u32;
         token_client.approve(
             &subscriber,
             &env.current_contract_address(),
