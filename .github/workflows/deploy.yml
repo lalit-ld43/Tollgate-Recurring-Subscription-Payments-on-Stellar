@@ -15,7 +15,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli --features opt
+        run: cargo install --locked soroban-cli
 
       - name: Configure Testnet and Generate Keys
         run: |
