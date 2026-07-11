@@ -1,24 +1,33 @@
+import {
+  isConnected,
+  setAllowed,
+  requestAccess,
+  getNetworkDetails as freighterGetNetworkDetails,
+  signTransaction as freighterSignTransaction,
+} from '@stellar/freighter-api'
+
 const NETWORK_PASSPHRASES = {
   TESTNET: 'Test SDF Network ; September 2015',
   PUBLIC: 'Public Global Stellar Network ; September 2015',
 }
 
-export function isFreighterInstalled() {
-  return typeof window !== 'undefined' && (!!window.freighterApi || !!window.freighter)
+export async function isFreighterInstalled() {
+  const result = await isConnected()
+  return result.isConnected
 }
 
 export async function connectWallet() {
-  if (!isFreighterInstalled()) {
+  const connected = await isFreighterInstalled()
+  if (!connected) {
     throw new Error(
       'Freighter wallet extension not found. Install it from freighter.app to continue.'
     )
   }
-  const api = window.freighterApi || window.freighter;
-  const access = await api.requestAccess()
-  if (access.error) {
-    throw new Error(access.error)
+  const allowed = await setAllowed()
+  if (allowed.error) {
+    throw new Error(allowed.error)
   }
-  const addressResult = await api.getAddress()
+  const addressResult = await requestAccess()
   if (addressResult.error) {
     throw new Error(addressResult.error)
   }
@@ -26,17 +35,17 @@ export async function connectWallet() {
 }
 
 export async function getNetworkDetails() {
-  if (!isFreighterInstalled()) return null
-  const api = window.freighterApi || window.freighter;
-  return api.getNetworkDetails()
+  const connected = await isFreighterInstalled()
+  if (!connected) return null
+  return freighterGetNetworkDetails()
 }
 
 export async function signTransaction(xdr, networkPassphrase) {
-  if (!isFreighterInstalled()) {
+  const connected = await isFreighterInstalled()
+  if (!connected) {
     throw new Error('Freighter wallet extension not found.')
   }
-  const api = window.freighterApi || window.freighter;
-  const result = await api.signTransaction(xdr, {
+  const result = await freighterSignTransaction(xdr, {
     networkPassphrase,
   })
   if (result.error) {

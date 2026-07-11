@@ -8,7 +8,7 @@ export function useWallet() {
   const [installed, setInstalled] = useState(true)
 
   useEffect(() => {
-    setInstalled(isFreighterInstalled())
+    isFreighterInstalled().then((res) => setInstalled(res))
   }, [])
 
   const connect = useCallback(async () => {
