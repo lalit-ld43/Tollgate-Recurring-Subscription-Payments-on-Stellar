@@ -4,6 +4,7 @@ use super::*;
 use soroban_sdk::testutils::{Address as _, Ledger};
 use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::{Address, Env, String};
+use soroban_sdk::token;
 use subscription::{SubStatus, SubscriptionContract, SubscriptionContractClient};
 
 const DAY: u64 = 86_400;
