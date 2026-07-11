@@ -193,8 +193,31 @@ fn test_charge_subscriber_requires_billing_contract_auth() {
     t.client.subscribe(&t.subscriber, &plan_id);
     advance_time(&t.env, 30 * DAY);
 
-    // mock_all_auths lets any caller through in tests, so we assert on the
-    // recorded auth instead: charge_subscriber requires billing's auth.
+    use soroban_sdk::testutils::MockAuth;
+    use soroban_sdk::testutils::MockAuthInvoke;
+    use soroban_sdk::IntoVal;
+
+    t.env.mock_auths(&[
+        MockAuth {
+            address: &t.billing,
+            invoke: &MockAuthInvoke {
+                contract: &t.contract_id,
+                fn_name: "charge_subscriber",
+                args: (&t.subscriber, &plan_id).into_val(&t.env),
+                sub_invokes: &[],
+            },
+        },
+        MockAuth {
+            address: &t.subscriber,
+            invoke: &MockAuthInvoke {
+                contract: &t.token,
+                fn_name: "transfer",
+                args: (&t.subscriber, &t.merchant, &1000i128).into_val(&t.env),
+                sub_invokes: &[],
+            },
+        },
+    ]);
+
     let amount = t.client.charge_subscriber(&t.subscriber, &plan_id);
     assert_eq!(amount, 1000);
 
@@ -251,7 +274,7 @@ fn test_failed_charge_marks_past_due_and_increments_misses() {
     // Drain the subscriber's balance so the next charge fails.
     let token_client = token::Client::new(&t.env, &t.token);
     let remaining = token_client.balance(&t.subscriber);
-    t.token_admin.clawback(&t.subscriber, &remaining);
+    token_client.transfer(&t.subscriber, &t.admin, &remaining);
 
     advance_time(&t.env, 30 * DAY);
     let amount = t.client.charge_subscriber(&t.subscriber, &plan_id);
@@ -276,7 +299,7 @@ fn test_auto_cancel_after_repeated_missed_charges() {
 
     let token_client = token::Client::new(&t.env, &t.token);
     let remaining = token_client.balance(&t.subscriber);
-    t.token_admin.clawback(&t.subscriber, &remaining);
+    token_client.transfer(&t.subscriber, &t.admin, &remaining);
 
     advance_time(&t.env, 30 * DAY);
     t.client.charge_subscriber(&t.subscriber, &plan_id); // miss 1 -> PastDue
