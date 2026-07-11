@@ -15,13 +15,22 @@ Tollgate is an advanced, production-ready subscription billing protocol built on
 
 ---
 
+## 📡 Smart Contract Deployment & Interactivity
+
+The protocol's smart contracts are deployed and verified on the Stellar Testnet. They are fully interactive through our frontend application.
+
+- **Subscription Contract**: [`CDZZNQU6UT5AFAZEVU5PNRAAC4CGEZEP7XLE5KJPD52PG6OQWCVE2E7W`](https://stellar.expert/explorer/testnet/contract/CDZZNQU6UT5AFAZEVU5PNRAAC4CGEZEP7XLE5KJPD52PG6OQWCVE2E7W)
+- **Billing Contract**: [`CB2BBHMKPWXMO5EB6GXOUP2UY3QCLJEJ3665CN3MIIQHJ4TZNH5FZR65`](https://stellar.expert/explorer/testnet/contract/CB2BBHMKPWXMO5EB6GXOUP2UY3QCLJEJ3665CN3MIIQHJ4TZNH5FZR65)
+
+---
+
 ## 📸 Platform Gallery & Submission Requirements
 
 As per the submission checklist, here are the required screenshots demonstrating the platform's capabilities:
 
 ### 1. Product UI
 The seamless frontend dashboard for merchants and subscribers.
-<img src="images/product ui.png" width="100%" alt="Product UI" />
+<img src="images/product_ui.png" width="100%" alt="Product UI" />
 
 ### 2. Mobile Responsive UI
 The platform is fully responsive and optimized for mobile devices.
