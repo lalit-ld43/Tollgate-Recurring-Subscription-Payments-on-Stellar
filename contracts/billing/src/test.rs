@@ -70,7 +70,7 @@ fn test_register_subscription() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.sub_client.subscribe(&t.subscriber, &plan_id);
+    t.sub_client.subscribe(&t.subscriber, &plan_id, &1_000_000);
 
     t.billing
         .register_subscription(&t.sub_id, &t.subscriber, &plan_id);
@@ -90,7 +90,7 @@ fn test_cannot_register_same_subscription_twice() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.sub_client.subscribe(&t.subscriber, &plan_id);
+    t.sub_client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     t.billing
         .register_subscription(&t.sub_id, &t.subscriber, &plan_id);
 
@@ -110,7 +110,7 @@ fn test_billing_cycle_skips_not_due_subscriptions() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.sub_client.subscribe(&t.subscriber, &plan_id);
+    t.sub_client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     t.billing
         .register_subscription(&t.sub_id, &t.subscriber, &plan_id);
 
@@ -128,7 +128,7 @@ fn test_billing_cycle_charges_due_subscription_via_cross_contract_call() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.sub_client.subscribe(&t.subscriber, &plan_id);
+    t.sub_client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     t.billing
         .register_subscription(&t.sub_id, &t.subscriber, &plan_id);
 
@@ -174,8 +174,8 @@ fn test_billing_cycle_handles_multiple_registrations() {
     let subscriber2 = Address::generate(&t.env);
     t.token_admin.mint(&subscriber2, &50_000);
 
-    t.sub_client.subscribe(&t.subscriber, &plan_id);
-    t.sub_client.subscribe(&subscriber2, &plan_id);
+    t.sub_client.subscribe(&t.subscriber, &plan_id, &1_000_000);
+    t.sub_client.subscribe(&subscriber2, &plan_id, &1_000_000);
     t.billing
         .register_subscription(&t.sub_id, &t.subscriber, &plan_id);
     t.billing

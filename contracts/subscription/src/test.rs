@@ -110,7 +110,7 @@ fn test_subscribe_charges_first_payment_immediately() {
         &String::from_str(&t.env, "Pro Monthly"),
     );
 
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
 
     let token_client = token::Client::new(&t.env, &t.token);
     assert_eq!(token_client.balance(&t.merchant), 1000);
@@ -131,8 +131,8 @@ fn test_cannot_subscribe_twice_while_active() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
-    let result = t.client.try_subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
+    let result = t.client.try_subscribe(&t.subscriber, &plan_id, &1_000_000);
     assert_eq!(result, Err(Ok(SubscriptionError::AlreadySubscribed)));
 }
 
@@ -147,7 +147,7 @@ fn test_cannot_subscribe_to_inactive_plan() {
         &String::from_str(&t.env, "Pro Monthly"),
     );
     t.client.deactivate_plan(&t.merchant, &plan_id);
-    let result = t.client.try_subscribe(&t.subscriber, &plan_id);
+    let result = t.client.try_subscribe(&t.subscriber, &plan_id, &1_000_000);
     assert_eq!(result, Err(Ok(SubscriptionError::PlanInactive)));
 }
 
@@ -161,7 +161,7 @@ fn test_is_due_false_before_period_elapses() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     assert!(!t.client.is_due(&t.subscriber, &plan_id));
 }
 
@@ -175,7 +175,7 @@ fn test_is_due_true_after_period_elapses() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     advance_time(&t.env, 30 * DAY);
     assert!(t.client.is_due(&t.subscriber, &plan_id));
 }
@@ -190,7 +190,7 @@ fn test_charge_subscriber_requires_billing_contract_auth() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     advance_time(&t.env, 30 * DAY);
 
     use soroban_sdk::testutils::MockAuth;
@@ -235,7 +235,7 @@ fn test_charge_subscriber_rejects_when_not_due() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
 
     let result = t.client.try_charge_subscriber(&t.subscriber, &plan_id);
     assert_eq!(result, Err(Ok(SubscriptionError::NotDueYet)));
@@ -251,7 +251,7 @@ fn test_cancel_prevents_future_charges() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     t.client.cancel(&t.subscriber, &plan_id);
 
     advance_time(&t.env, 30 * DAY);
@@ -269,7 +269,7 @@ fn test_failed_charge_marks_past_due_and_increments_misses() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
 
     // Drain the subscriber's balance so the next charge fails.
     let token_client = token::Client::new(&t.env, &t.token);
@@ -295,7 +295,7 @@ fn test_auto_cancel_after_repeated_missed_charges() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
 
     let token_client = token::Client::new(&t.env, &t.token);
     let remaining = token_client.balance(&t.subscriber);
@@ -360,11 +360,11 @@ fn test_resubscribe_after_cancel_is_allowed() {
         &(30 * DAY),
         &String::from_str(&t.env, "Pro Monthly"),
     );
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     t.client.cancel(&t.subscriber, &plan_id);
 
     // Should succeed: previous subscription record is Cancelled, not Active.
-    t.client.subscribe(&t.subscriber, &plan_id);
+    t.client.subscribe(&t.subscriber, &plan_id, &1_000_000);
     let sub = t.client.get_subscription(&t.subscriber, &plan_id);
     assert_eq!(sub.status, SubStatus::Active);
 }
