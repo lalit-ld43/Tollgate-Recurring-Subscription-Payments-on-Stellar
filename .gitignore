@@ -1,7 +1,6 @@
 # Rust / Soroban
 /target
 **/target
-Cargo.lock
 
 # Node / frontend
 frontend/node_modules
