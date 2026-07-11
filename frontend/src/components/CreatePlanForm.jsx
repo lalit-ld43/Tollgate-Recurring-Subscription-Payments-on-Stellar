@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { TOKEN_CONTRACT_ID } from '../lib/config'
+
+const DEFAULT_TOKEN = TOKEN_CONTRACT_ID || 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'
 
 export default function CreatePlanForm({ onCreate, disabled }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState(DEFAULT_TOKEN)
   const [price, setPrice] = useState('')
   const [periodDays, setPeriodDays] = useState('30')
   const [busy, setBusy] = useState(false)
@@ -22,7 +25,7 @@ export default function CreatePlanForm({ onCreate, disabled }) {
         periodSeconds: Number(periodDays) * 86400,
       })
       setName('')
-      setToken('')
+      setToken(DEFAULT_TOKEN)
       setPrice('')
       setPeriodDays('30')
       setOpen(false)

@@ -164,6 +164,18 @@ impl SubscriptionContract {
         let token_client = token::Client::new(&env, &plan.token);
         token_client.transfer(&subscriber, &plan.merchant, &plan.price);
 
+        // Set a long-lived allowance so the billing contract can auto-charge
+        // future cycles without requiring the subscriber to re-sign each time.
+        // Allow price * 120 transfers (~10 years of monthly billing).
+        // Expiration: 3_110_400 ledgers ≈ 2 years at ~5s per ledger.
+        let expiry_ledger: u32 = env.ledger().sequence() + 3_110_400u32;
+        token_client.approve(
+            &subscriber,
+            &env.current_contract_address(),
+            &(plan.price * 120),
+            &expiry_ledger,
+        );
+
         let now = env.ledger().timestamp();
         let sub = Subscription {
             subscriber: subscriber.clone(),
@@ -237,10 +249,14 @@ impl SubscriptionContract {
         }
 
         let token_client = token::Client::new(&env, &plan.token);
-        // In production, a pre-authorized allowance would be used instead of
-        // a direct transfer requiring subscriber auth on every cycle; here
-        // we model the successful-charge path plainly for clarity.
-        let charge_result = token_client.try_transfer(&subscriber, &plan.merchant, &plan.price);
+        // Use transfer_from with this contract as the pre-approved spender.
+        // The subscriber granted this allowance during subscribe().
+        let charge_result = token_client.try_transfer_from(
+            &env.current_contract_address(),
+            &subscriber,
+            &plan.merchant,
+            &plan.price,
+        );
 
         match charge_result {
             Ok(_) => {
