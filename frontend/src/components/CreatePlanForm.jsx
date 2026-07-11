@@ -8,10 +8,10 @@ export default function CreatePlanForm({ onCreate, disabled }) {
   const [name, setName] = useState('')
   const [token, setToken] = useState(DEFAULT_TOKEN)
   const [price, setPrice] = useState('')
-  const [periodDays, setPeriodDays] = useState('30')
+  const [periodSeconds, setPeriodSeconds] = useState('60')
   const [busy, setBusy] = useState(false)
 
-  const valid = name.trim() && token.trim() && Number(price) > 0 && Number(periodDays) > 0
+  const valid = name.trim() && token.trim() && Number(price) > 0 && Number(periodSeconds) >= 60
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,13 +21,13 @@ export default function CreatePlanForm({ onCreate, disabled }) {
       await onCreate({
         name: name.trim(),
         token: token.trim(),
-        price: Number(price),
-        periodSeconds: Number(periodDays) * 86400,
+        price: Math.floor(Number(price) * 10000000), // convert XLM to stroops
+        periodSeconds: Number(periodSeconds),
       })
       setName('')
       setToken(DEFAULT_TOKEN)
       setPrice('')
-      setPeriodDays('30')
+      setPeriodSeconds('60')
       setOpen(false)
     } finally {
       setBusy(false)
@@ -82,24 +82,25 @@ export default function CreatePlanForm({ onCreate, disabled }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="font-mono text-[10px] uppercase tracking-widest2 text-chalk-dim/60 block mb-1.5">
-            Price per cycle
+            Price per cycle (XLM)
           </label>
           <input
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             type="number"
             min="0"
-            placeholder="1000"
+            step="0.0000001"
+            placeholder="100"
             className="w-full bg-asphalt border border-asphalt-line rounded p-2.5 text-sm font-mono text-chalk placeholder:text-chalk-dim/30 focus:border-amber/60 outline-none"
           />
         </div>
         <div>
           <label className="font-mono text-[10px] uppercase tracking-widest2 text-chalk-dim/60 block mb-1.5">
-            Billing period (days)
+            Billing period (SECONDS)
           </label>
           <input
-            value={periodDays}
-            onChange={(e) => setPeriodDays(e.target.value)}
+            value={periodSeconds}
+            onChange={(e) => setPeriodSeconds(e.target.value)}
             type="number"
             min="1"
             placeholder="30"

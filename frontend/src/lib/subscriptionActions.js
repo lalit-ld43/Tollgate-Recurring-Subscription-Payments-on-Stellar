@@ -87,7 +87,7 @@ export function normalizePlan(planId, raw) {
     id: planId,
     merchant: raw.merchant,
     token: raw.token,
-    price: raw.price?.toString?.() ?? String(raw.price),
+    price: (Number(raw.price?.toString?.() ?? String(raw.price)) / 10000000).toString(),
     periodSeconds: Number(raw.period_seconds),
     name: raw.name,
     active: raw.active,

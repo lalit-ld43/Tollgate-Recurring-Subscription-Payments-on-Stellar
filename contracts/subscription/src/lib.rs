@@ -107,7 +107,8 @@ impl SubscriptionContract {
         if price <= 0 {
             return Err(SubscriptionError::InvalidPrice);
         }
-        if period_seconds == 0 {
+        // For demo purposes, we allow very short periods (e.g. 60 seconds).
+        if period_seconds < 60 {
             return Err(SubscriptionError::InvalidPeriod);
         }
 
@@ -164,21 +165,17 @@ impl SubscriptionContract {
         let token_client = token::Client::new(&env, &plan.token);
         token_client.transfer(&subscriber, &plan.merchant, &plan.price);
 
-        // We must omit the `approve` call in production because the Stellar Testnet currently
-        // has a max `live_until` absolute ledger that is smaller than the current ledger.
-        // Any call to `approve` with a future ledger will trap with "live_until is greater than max".
-        // Future billing sweeps will just fail the `try_transfer_from` and increment `missed_charges`.
-        // We set GRACE_PERIOD_MISSES to 100 so the subscription stays active during the demo.
-        #[cfg(any(test, feature = "testutils"))]
-        {
-            let expiry_ledger: u32 = env.ledger().sequence() + 1_000_000u32;
-            token_client.approve(
-                &subscriber,
-                &env.current_contract_address(),
-                &(plan.price * 120),
-                &expiry_ledger,
-            );
-        }
+        // Set a long-lived allowance so the billing contract can auto-charge
+        // future cycles without requiring the subscriber to re-sign each time.
+        // Allow price * 120 transfers (~10 years of monthly billing).
+        // Expiration: 1_000_000 ledgers ≈ 57 days (well within the testnet max TTL of 3,110,400).
+        let expiry_ledger: u32 = env.ledger().sequence() + 1_000_000u32;
+        token_client.approve(
+            &subscriber,
+            &env.current_contract_address(),
+            &(plan.price * 120),
+            &expiry_ledger,
+        );
 
         let now = env.ledger().timestamp();
         let sub = Subscription {

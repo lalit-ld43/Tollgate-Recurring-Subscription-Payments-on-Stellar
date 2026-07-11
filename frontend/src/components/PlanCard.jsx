@@ -1,6 +1,8 @@
 export default function PlanCard({ plan, walletAddress, onSubscribe, busy }) {
   const short = (addr) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '—')
-  const days = Math.round(plan.periodSeconds / 86400)
+  const durationText = plan.periodSeconds >= 86400 
+    ? `${Math.round(plan.periodSeconds / 86400)}d` 
+    : `${plan.periodSeconds}s`
   const isOwnPlan = walletAddress && plan.merchant === walletAddress
 
   return (
@@ -21,7 +23,7 @@ export default function PlanCard({ plan, walletAddress, onSubscribe, busy }) {
 
       <div className="flex items-baseline gap-1 mb-3">
         <span className="font-display font-semibold text-2xl text-amber">{plan.price}</span>
-        <span className="font-mono text-xs text-chalk-dim/60">/ {days}d cycle</span>
+        <span className="font-mono text-xs text-chalk-dim/60">/ {durationText} cycle</span>
       </div>
 
       <p className="font-mono text-xs text-chalk-dim/50 mb-4">Merchant: {short(plan.merchant)}</p>
