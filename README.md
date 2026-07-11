@@ -21,6 +21,7 @@ The protocol's smart contracts are deployed and verified on the Stellar Testnet.
 
 - **Subscription Contract**: [`CDZZNQU6UT5AFAZEVU5PNRAAC4CGEZEP7XLE5KJPD52PG6OQWCVE2E7W`](https://stellar.expert/explorer/testnet/contract/CDZZNQU6UT5AFAZEVU5PNRAAC4CGEZEP7XLE5KJPD52PG6OQWCVE2E7W)
 - **Billing Contract**: [`CB2BBHMKPWXMO5EB6GXOUP2UY3QCLJEJ3665CN3MIIQHJ4TZNH5FZR65`](https://stellar.expert/explorer/testnet/contract/CB2BBHMKPWXMO5EB6GXOUP2UY3QCLJEJ3665CN3MIIQHJ4TZNH5FZR65)
+- **Example Transaction Hash (Interaction)**: [`c588e90786d49ede8a45bd897eea2bc7c6e2382920bd4832e4b387adabd085de`](https://stellar.expert/explorer/testnet/tx/c588e90786d49ede8a45bd897eea2bc7c6e2382920bd4832e4b387adabd085de)
 
 ---
 
