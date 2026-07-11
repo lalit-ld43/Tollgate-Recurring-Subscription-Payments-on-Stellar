@@ -105,7 +105,10 @@ export default function App() {
       return
     }
     try {
-      const { hash } = await subscribe({ subscriber: wallet.address, planId })
+      const { hash, status } = await subscribe({ subscriber: wallet.address, planId })
+      if (status !== 'SUCCESS') {
+        throw new Error('Transaction failed on the network. Check explorer.')
+      }
       setTxByPlan((prev) => ({ ...prev, [planId]: hash }))
       await refreshSubscription(planId)
       
