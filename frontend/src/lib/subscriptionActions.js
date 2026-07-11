@@ -99,7 +99,11 @@ export function normalizeSubscription(raw) {
   return {
     subscriber: raw.subscriber,
     planId: Number(raw.plan_id),
-    status: typeof raw.status === 'string' ? raw.status : Object.keys(raw.status)[0],
+    status: typeof raw.status === 'string' 
+      ? raw.status 
+      : Array.isArray(raw.status) 
+        ? raw.status[0] 
+        : Object.keys(raw.status)[0],
     lastChargedAt: Number(raw.last_charged_at),
     nextDueAt: Number(raw.next_due_at),
     missedCharges: Number(raw.missed_charges),
