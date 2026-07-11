@@ -1,5 +1,8 @@
-export default function Header({ wallet }) {
+import { useTokenBalance } from '../hooks/useTokenBalance'
+
+export default function Header({ wallet, feed }) {
   const short = (addr) => (addr ? `${addr.slice(0, 4)}…${addr.slice(-4)}` : '')
+  const { balance } = useTokenBalance(wallet.address, feed)
 
   return (
     <header className="border-b border-asphalt-line bg-asphalt/80 backdrop-blur sticky top-0 z-30">
@@ -20,13 +23,20 @@ export default function Header({ wallet }) {
 
         <div>
           {wallet.address ? (
-            <button
-              onClick={wallet.disconnect}
-              className="font-mono text-xs sm:text-sm px-3 py-2 rounded border border-amber/40 text-amber hover:bg-amber/10 transition-colors"
-              title="Click to disconnect"
-            >
-              {short(wallet.address)}
-            </button>
+            <div className="flex items-center gap-4">
+              {balance !== null && (
+                <div className="font-mono text-xs sm:text-sm text-chalk-dim hidden sm:block">
+                  {balance} XLM
+                </div>
+              )}
+              <button
+                onClick={wallet.disconnect}
+                className="font-mono text-xs sm:text-sm px-3 py-2 rounded border border-amber/40 text-amber hover:bg-amber/10 transition-colors"
+                title="Click to disconnect"
+              >
+                {short(wallet.address)}
+              </button>
+            </div>
           ) : (
             <button
               onClick={wallet.connect}

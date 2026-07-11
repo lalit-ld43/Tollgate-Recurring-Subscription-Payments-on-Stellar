@@ -149,7 +149,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header wallet={wallet} />
+      <Header wallet={wallet} feed={feed} />
       <Hero />
 
       <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-1">
