@@ -45,20 +45,39 @@ jobs:
           stellar keys generate subscriber --network testnet
           stellar keys fund deployer --network testnet
           stellar keys fund subscriber --network testnet
-          
-          # Deploy Billing
-          BILLING_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/billing.optimized.wasm --source deployer --network testnet)
+          # Deploy Billing with Retry
+          echo "Deploying Billing Contract..."
+          for i in 1 2 3 4 5; do
+            BILLING_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/billing.optimized.wasm --source deployer --network testnet) && break
+            echo "Deploy failed, retrying in 10s..."
+            sleep 10
+          done
           echo "BILLING_ID=$BILLING_ID" >> $GITHUB_ENV
           
-          # Initialize Billing
-          stellar contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer)
+          # Initialize Billing with Retry
+          echo "Initializing Billing Contract..."
+          for i in 1 2 3 4 5; do
+            stellar contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer) && break
+            echo "Invoke failed, retrying in 10s..."
+            sleep 10
+          done
           
-          # Deploy Subscription
-          SUBSCRIPTION_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/subscription.optimized.wasm --source deployer --network testnet)
+          # Deploy Subscription with Retry
+          echo "Deploying Subscription Contract..."
+          for i in 1 2 3 4 5; do
+            SUBSCRIPTION_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/subscription.optimized.wasm --source deployer --network testnet) && break
+            echo "Deploy failed, retrying in 10s..."
+            sleep 10
+          done
           echo "SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
           
-          # Initialize Subscription
-          stellar contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer) --billing_contract $BILLING_ID
+          # Initialize Subscription with Retry
+          echo "Initializing Subscription Contract..."
+          for i in 1 2 3 4 5; do
+            stellar contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer) --billing_contract $BILLING_ID && break
+            echo "Invoke failed, retrying in 10s..."
+            sleep 10
+          done
           
           # Fetch Native Token ID
           TOKEN_ID=$(stellar contract id asset --asset native --network testnet)
