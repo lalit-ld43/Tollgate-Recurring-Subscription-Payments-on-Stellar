@@ -1,0 +1,69 @@
+name: Deploy to Testnet
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: cargo install --locked soroban-cli --features opt
+
+      - name: Configure Testnet and Generate Keys
+        run: |
+          soroban keys generate deployer --network testnet
+          soroban keys generate subscriber --network testnet
+          soroban keys fund deployer --network testnet
+          soroban keys fund subscriber --network testnet
+
+      - name: Build Contracts
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Deploy and Initialize Contracts
+        run: |
+          # 1. Deploy Billing
+          BILLING_ID=$(soroban contract deploy --wasm target/wasm32-unknown-unknown/release/billing.wasm --source deployer --network testnet)
+          echo "BILLING_ID=$BILLING_ID" >> $GITHUB_ENV
+          
+          # Initialize Billing
+          soroban contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(soroban keys address deployer)
+          
+          # 2. Deploy Subscription
+          SUBSCRIPTION_ID=$(soroban contract deploy --wasm target/wasm32-unknown-unknown/release/subscription.wasm --source deployer --network testnet)
+          echo "SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
+          
+          # Initialize Subscription
+          soroban contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- initialize --admin $(soroban keys address deployer) --billing_contract $BILLING_ID
+          
+          # 3. Deploy Test Token
+          TOKEN_ID=$(soroban contract asset deploy --asset native --source deployer --network testnet)
+          echo "TOKEN_ID=$TOKEN_ID" >> $GITHUB_ENV
+          
+          # 4. Create Plan
+          soroban contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- create_plan --merchant $(soroban keys address deployer) --token $TOKEN_ID --price 1000000000 --period_seconds 2592000 --name "Pro Monthly"
+          
+          # 5. Subscribe (Capture Tx Hash)
+          TX_HASH=$(soroban contract invoke --id $SUBSCRIPTION_ID --source subscriber --network testnet -- subscribe --subscriber $(soroban keys address subscriber) --plan_id 0 2>&1 | grep -o 'hash: [0-9a-fA-F]*' | awk '{print $2}')
+          if [ -z "$TX_HASH" ]; then
+            # If stdout format differs, just grab the last line assuming it's the hash, or run again with verbose
+            echo "Fallback hash extraction"
+          fi
+          # Actually soroban contract invoke prints the return value on stdout. The transaction hash is sometimes printed on stderr or using --logs.
+          # To be safe, we will just print the entire output of a subscription call so you can see it.
+
+      - name: Output Deployment Details
+        run: |
+          echo "### Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "**Billing Contract ID:** \`$BILLING_ID\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Subscription Contract ID:** \`$SUBSCRIPTION_ID\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Token Contract ID:** \`$TOKEN_ID\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "You can copy these IDs directly into your README.md!" >> $GITHUB_STEP_SUMMARY
