@@ -6,7 +6,6 @@ import PlanCard from './components/PlanCard'
 import SubscriptionCard from './components/SubscriptionCard'
 import BillingSweepPanel from './components/BillingSweepPanel'
 import ActivityFeed from './components/ActivityFeed'
-import CardSkeleton from './components/CardSkeleton'
 import Banner from './components/Banner'
 import { useWallet } from './hooks/useWallet'
 import { useEventStream } from './hooks/useEventStream'
@@ -157,7 +156,7 @@ export default function App() {
         {!configured && (
           <div className="mb-6">
             <Banner type="warning">
-              Contract addresses aren't configured yet. Set{' '}
+              Contract addresses aren&apos;t configured yet. Set{' '}
               <code className="font-mono">VITE_SUBSCRIPTION_CONTRACT_ID</code>,{' '}
               <code className="font-mono">VITE_BILLING_CONTRACT_ID</code>, and{' '}
               <code className="font-mono">VITE_TOKEN_CONTRACT_ID</code> in your{' '}
