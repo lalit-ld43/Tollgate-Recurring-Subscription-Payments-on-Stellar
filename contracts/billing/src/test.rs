@@ -134,6 +134,22 @@ fn test_billing_cycle_charges_due_subscription_via_cross_contract_call() {
 
     advance_time(&t.env, 30 * DAY);
 
+    use soroban_sdk::testutils::MockAuth;
+    use soroban_sdk::testutils::MockAuthInvoke;
+    use soroban_sdk::IntoVal;
+
+    t.env.mock_auths(&[
+        MockAuth {
+            address: &t.subscriber,
+            invoke: &MockAuthInvoke {
+                contract: &t.token,
+                fn_name: "transfer",
+                args: (&t.subscriber, &t.merchant, &1000i128).into_val(&t.env),
+                sub_invokes: &[],
+            },
+        }
+    ]);
+
     let charged = t.billing.run_billing_cycle();
     assert_eq!(charged, 1);
 
@@ -166,6 +182,31 @@ fn test_billing_cycle_handles_multiple_registrations() {
         .register_subscription(&t.sub_id, &subscriber2, &plan_id);
 
     advance_time(&t.env, 7 * DAY);
+
+    use soroban_sdk::testutils::MockAuth;
+    use soroban_sdk::testutils::MockAuthInvoke;
+    use soroban_sdk::IntoVal;
+
+    t.env.mock_auths(&[
+        MockAuth {
+            address: &t.subscriber,
+            invoke: &MockAuthInvoke {
+                contract: &t.token,
+                fn_name: "transfer",
+                args: (&t.subscriber, &t.merchant, &500i128).into_val(&t.env),
+                sub_invokes: &[],
+            },
+        },
+        MockAuth {
+            address: &subscriber2,
+            invoke: &MockAuthInvoke {
+                contract: &t.token,
+                fn_name: "transfer",
+                args: (&subscriber2, &t.merchant, &500i128).into_val(&t.env),
+                sub_invokes: &[],
+            },
+        }
+    ]);
 
     let charged = t.billing.run_billing_cycle();
     assert_eq!(charged, 2);
