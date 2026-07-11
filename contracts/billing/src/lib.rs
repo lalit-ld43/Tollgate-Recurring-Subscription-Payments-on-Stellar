@@ -13,8 +13,8 @@
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Vec,
 };
-use subscription::SubscriptionContractClient;
-
+mod subscription_client;
+use subscription_client::client::{SubscriptionClient, SubscriptionError};
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct Registration {
@@ -117,7 +117,7 @@ impl BillingContract {
 
         for reg in registrations.iter() {
             let sub_client =
-                SubscriptionContractClient::new(&env, &reg.subscription_contract);
+                SubscriptionClient::new(&env, &reg.subscription_contract);
 
             let due = sub_client.is_due(&reg.subscriber, &reg.plan_id);
             if !due {

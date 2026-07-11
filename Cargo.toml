@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "contracts/subscription",
-    "contracts/billing",
+    "contracts/billing", "contracts/subscription-interface",
 ]
 
 [profile.release]

@@ -17,7 +17,7 @@ use soroban_sdk::{
 };
 
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Plan {
     pub merchant: Address,
     pub token: Address,
@@ -36,7 +36,7 @@ pub enum SubStatus {
 }
 
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Subscription {
     pub subscriber: Address,
     pub plan_id: u64,
