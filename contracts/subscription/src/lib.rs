@@ -147,7 +147,7 @@ impl SubscriptionContract {
 
     /// Subscriber opts into a plan. Pulls the first payment immediately and
     /// schedules the next charge one period out.
-    pub fn subscribe(env: Env, subscriber: Address, plan_id: u64) -> Result<(), SubscriptionError> {
+    pub fn subscribe(env: Env, subscriber: Address, plan_id: u64, expiry_ledger: u32) -> Result<(), SubscriptionError> {
         subscriber.require_auth();
         let plan = Self::load_plan(&env, plan_id)?;
         if !plan.active {
@@ -167,9 +167,8 @@ impl SubscriptionContract {
 
         // Set a long-lived allowance so the billing contract can auto-charge
         // future cycles without requiring the subscriber to re-sign each time.
-        // Allow price * 120 transfers (~10 years of monthly billing).
-        // Expiration: 1_000_000 ledgers ≈ 57 days (well within the testnet max TTL of 3,110,400).
-        let expiry_ledger: u32 = env.ledger().sequence() + 1_000_000u32;
+        // The expiry_ledger is passed from the frontend to avoid auth footprint mismatch
+        // between simulation and execution.
         token_client.approve(
             &subscriber,
             &env.current_contract_address(),

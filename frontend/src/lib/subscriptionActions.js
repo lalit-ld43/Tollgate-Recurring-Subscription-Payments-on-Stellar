@@ -6,6 +6,8 @@ import {
   i128ToScVal,
   u64ToScVal,
 } from './sorobanClient'
+import { nativeToScVal } from '@stellar/stellar-sdk'
+import { getServer } from './sorobanClient'
 import { SUBSCRIPTION_CONTRACT_ID, BILLING_CONTRACT_ID } from './config'
 
 export async function createPlan({ merchant, token, price, periodSeconds, name }) {
@@ -25,7 +27,13 @@ export async function createPlan({ merchant, token, price, periodSeconds, name }
 }
 
 export async function subscribe({ subscriber, planId }) {
-  const args = [addressToScVal(subscriber), u64ToScVal(planId)]
+  const latest = await getServer().getLatestLedger()
+  const expiryLedger = latest.sequence + 1000000
+  const args = [
+    addressToScVal(subscriber), 
+    u64ToScVal(planId), 
+    nativeToScVal(expiryLedger, { type: 'u32' })
+  ]
   return invokeContract({
     contractId: SUBSCRIPTION_CONTRACT_ID,
     method: 'subscribe',
