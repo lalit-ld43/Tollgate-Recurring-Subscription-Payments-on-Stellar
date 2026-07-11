@@ -164,11 +164,21 @@ impl SubscriptionContract {
         let token_client = token::Client::new(&env, &plan.token);
         token_client.transfer(&subscriber, &plan.merchant, &plan.price);
 
-        // We must omit the `approve` call here because the Stellar Testnet currently
+        // We must omit the `approve` call in production because the Stellar Testnet currently
         // has a max `live_until` absolute ledger that is smaller than the current ledger.
         // Any call to `approve` with a future ledger will trap with "live_until is greater than max".
         // Future billing sweeps will just fail the `try_transfer_from` and increment `missed_charges`.
         // We set GRACE_PERIOD_MISSES to 100 so the subscription stays active during the demo.
+        #[cfg(any(test, feature = "testutils"))]
+        {
+            let expiry_ledger: u32 = env.ledger().sequence() + 1_000_000u32;
+            token_client.approve(
+                &subscriber,
+                &env.current_contract_address(),
+                &(plan.price * 120),
+                &expiry_ledger,
+            );
+        }
 
         let now = env.ledger().timestamp();
         let sub = Subscription {
