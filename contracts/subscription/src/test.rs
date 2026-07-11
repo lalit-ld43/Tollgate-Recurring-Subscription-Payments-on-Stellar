@@ -301,14 +301,17 @@ fn test_auto_cancel_after_repeated_missed_charges() {
     let remaining = token_client.balance(&t.subscriber);
     token_client.transfer(&t.subscriber, &t.admin, &remaining);
 
+    for _ in 0..99 {
+        advance_time(&t.env, 30 * DAY);
+        t.client.charge_subscriber(&t.subscriber, &plan_id);
+    }
+    
     advance_time(&t.env, 30 * DAY);
-    t.client.charge_subscriber(&t.subscriber, &plan_id); // miss 1 -> PastDue
-    advance_time(&t.env, 30 * DAY);
-    t.client.charge_subscriber(&t.subscriber, &plan_id); // miss 2 -> Cancelled
+    t.client.charge_subscriber(&t.subscriber, &plan_id); // miss 100 -> Cancelled
 
     let sub = t.client.get_subscription(&t.subscriber, &plan_id);
     assert_eq!(sub.status, SubStatus::Cancelled);
-    assert_eq!(sub.missed_charges, 2);
+    assert_eq!(sub.missed_charges, 100);
 }
 
 #[test]
