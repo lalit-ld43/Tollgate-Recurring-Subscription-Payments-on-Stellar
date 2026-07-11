@@ -1,7 +1,10 @@
 name: Deploy to Testnet
 
 on:
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   deploy:
@@ -14,50 +17,58 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli
+      - name: Cache cargo registry and binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-cargo-deploy-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Configure Testnet and Generate Keys
+      - name: Install cargo-binstall
+        run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+
+      - name: Install Stellar CLI
+        run: cargo binstall --no-confirm stellar-cli
+
+      - name: Build and Optimize Contracts
         run: |
-          soroban keys generate deployer --network testnet
-          soroban keys generate subscriber --network testnet
-          soroban keys fund deployer --network testnet
-          soroban keys fund subscriber --network testnet
-
-      - name: Build Contracts
-        run: cargo build --target wasm32-unknown-unknown --release
+          cargo build --target wasm32-unknown-unknown --release
+          stellar contract optimize --wasm target/wasm32-unknown-unknown/release/billing.wasm
+          stellar contract optimize --wasm target/wasm32-unknown-unknown/release/subscription.wasm
 
       - name: Deploy and Initialize Contracts
         run: |
-          # 1. Deploy Billing
-          BILLING_ID=$(soroban contract deploy --wasm target/wasm32-unknown-unknown/release/billing.wasm --source deployer --network testnet)
+          stellar keys generate deployer --network testnet
+          stellar keys generate subscriber --network testnet
+          stellar keys fund deployer --network testnet
+          stellar keys fund subscriber --network testnet
+          
+          # Deploy Billing
+          BILLING_ID=$(stellar contract deploy --wasm target/wasm32-unknown-unknown/release/billing.optimized.wasm --source deployer --network testnet)
           echo "BILLING_ID=$BILLING_ID" >> $GITHUB_ENV
           
           # Initialize Billing
-          soroban contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(soroban keys address deployer)
+          stellar contract invoke --id $BILLING_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer)
           
-          # 2. Deploy Subscription
-          SUBSCRIPTION_ID=$(soroban contract deploy --wasm target/wasm32-unknown-unknown/release/subscription.wasm --source deployer --network testnet)
+          # Deploy Subscription
+          SUBSCRIPTION_ID=$(stellar contract deploy --wasm target/wasm32-unknown-unknown/release/subscription.optimized.wasm --source deployer --network testnet)
           echo "SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
           
           # Initialize Subscription
-          soroban contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- initialize --admin $(soroban keys address deployer) --billing_contract $BILLING_ID
+          stellar contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- initialize --admin $(stellar keys address deployer) --billing_contract $BILLING_ID
           
-          # 3. Deploy Test Token
-          TOKEN_ID=$(soroban contract asset deploy --asset native --source deployer --network testnet)
+          # Fetch Native Token ID
+          TOKEN_ID=$(stellar contract id asset --asset native --network testnet)
           echo "TOKEN_ID=$TOKEN_ID" >> $GITHUB_ENV
           
-          # 4. Create Plan
-          soroban contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- create_plan --merchant $(soroban keys address deployer) --token $TOKEN_ID --price 1000000000 --period_seconds 2592000 --name "Pro Monthly"
+          # Create Plan
+          stellar contract invoke --id $SUBSCRIPTION_ID --source deployer --network testnet -- create_plan --merchant $(stellar keys address deployer) --token $TOKEN_ID --price 1000000000 --period_seconds 2592000 --name "Pro Monthly"
           
-          # 5. Subscribe (Capture Tx Hash)
-          TX_HASH=$(soroban contract invoke --id $SUBSCRIPTION_ID --source subscriber --network testnet -- subscribe --subscriber $(soroban keys address subscriber) --plan_id 0 2>&1 | grep -o 'hash: [0-9a-fA-F]*' | awk '{print $2}')
-          if [ -z "$TX_HASH" ]; then
-            # If stdout format differs, just grab the last line assuming it's the hash, or run again with verbose
-            echo "Fallback hash extraction"
-          fi
-          # Actually soroban contract invoke prints the return value on stdout. The transaction hash is sometimes printed on stderr or using --logs.
-          # To be safe, we will just print the entire output of a subscription call so you can see it.
+          # Subscribe
+          TX_HASH=$(stellar contract invoke --id $SUBSCRIPTION_ID --source subscriber --network testnet -- subscribe --subscriber $(stellar keys address subscriber) --plan_id 0 2>&1 | grep -o 'hash: [0-9a-fA-F]*' | awk '{print $2}')
 
       - name: Output Deployment Details
         run: |
